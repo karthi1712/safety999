@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="nav">
+  <h3 onclick="goHome()" style="cursor:pointer">Safety</h3>
+</div>
+
+<div class="container">
+<h2>Create Account</h2>
+
+<input id="name" placeholder="Full Name">
+<input id="email" placeholder="Email">
+<input id="mobile" placeholder="Mobile Number">
+<input id="password" type="password" placeholder="Password">
+
+<button class="btn primary" onclick="register()">Register</button>
+
+<p>Already have account? <a href="login.html">Login</a></p>
+</div>
+
+<script>
+function goHome(){ window.location.href="index.html"; }
+
+async function register(){
+
+  const res = await fetch("http://localhost:5000/api/auth/register",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      name: document.getElementById("name").value,
+      email: document.getElementById("email").value,
+      mobile: document.getElementById("mobile").value,
+      password: document.getElementById("password").value
+    })
+  });
+
+  const data = await res.json();
+
+  if(res.status === 200){
+    alert("Registered successfully");
+    window.location.href = "login.html";
+  } else {
+    alert(data.msg);
+  }
+}
+</script>
+
+</body>
+</html>
