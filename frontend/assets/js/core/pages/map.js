@@ -1,54 +1,74 @@
-const socket = io("http://localhost:5000");
-initPage(async () => {
-socket.on("newIncident", (i) => {
-  L.circleMarker(
-    [i.location.coordinates[1], i.location.coordinates[0]],
-    { color: "red" }
-  )
-  .addTo(window.mapInstance)
-  .bindPopup(i.title);
-});
+(async () => {
+  const map = L.map("map").setView([20.59, 78.96], 5);
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
 
-  document.getElementById("app").innerHTML =
-    `<div id="map" style="height:85vh;"></div>`;
+  const severityColor = (severity) => {
+    return severity === "high" ? "red" : severity === "medium" ? "orange" : "green";
+  };
 
-  navigator.geolocation.getCurrentPosition(async (pos) => {
+  const incidentData = await fetchIncidents();
+  const markers = [];
 
-    const lat = pos.coords.latitude;
-    const lng = pos.coords.longitude;
+  incidentData.forEach((incident) => {
+    const coords = incident.location?.coordinates || [];
+    if (coords.length < 2) return;
 
-    const map = L.map('map').setView([lat, lng], 13);
+    const lat = coords[1];
+    const lng = coords[0];
+    const color = severityColor(incident.severity);
 
-    window.mapInstance = map;
+    const marker = L.circleMarker([lat, lng], {
+      radius: 10,
+      color,
+      fillColor: color,
+      fillOpacity: 0.8,
+      weight: 2
+    }).addTo(map);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
-      .addTo(map);
+    marker.bindPopup(`
+      <strong>${incident.title}</strong><br>
+      Severity: ${incident.severity || "unknown"}<br>
+      ${incident.description || "No description."}<br>
+      <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" target="_blank">Navigate here</a>
+    `);
 
-    // 🔥 LOAD INCIDENTS
-    const data = await fetchNearby(lat, lng);
-
-    data.forEach(i => {
-      const color =
-        i.severity === "high" ? "red" :
-        i.severity === "medium" ? "orange" : "green";
-
-      L.circleMarker(
-        [i.location.coordinates[1], i.location.coordinates[0]],
-        { color }
-      )
-      .addTo(map)
-      .bindPopup(`
-        <b>${i.title}</b><br>
-        ${i.description || ""}
-      `);
-    });
-
+    markers.push(marker);
   });
-});
 
-// Fix map resize bug
-window.addEventListener("resize", () => {
-  if (window.mapInstance) {
-    window.mapInstance.invalidateSize();
+  if (markers.length) {
+    const bounds = L.featureGroup(markers).getBounds();
+    map.fitBounds(bounds.pad(0.2));
   }
-});
+
+  map.locate({ setView: true, maxZoom: 13 });
+
+  map.on("locationfound", (e) => {
+    const radius = e.accuracy / 2;
+    L.marker(e.latlng).addTo(map).bindPopup("You are here").openPopup();
+    L.circle(e.latlng, { radius, color: "#3ad", fillOpacity: 0.1 }).addTo(map);
+  });
+
+  map.on("locationerror", () => {
+    console.warn("Location access denied or unavailable.");
+  });
+
+  const legend = L.control({ position: "bottomright" });
+  legend.onAdd = () => {
+    const div = L.DomUtil.create("div", "leaflet-legend");
+    div.style.background = "rgba(0,0,0,0.65)";
+    div.style.color = "white";
+    div.style.padding = "10px 12px";
+    div.style.borderRadius = "10px";
+    div.style.lineHeight = "1.5em";
+    div.innerHTML = `
+      <strong>Severity</strong><br>
+      <span style="display:inline-block;width:12px;height:12px;background:green;margin-right:6px;border-radius:50%"></span> Low<br>
+      <span style="display:inline-block;width:12px;height:12px;background:orange;margin-right:6px;border-radius:50%"></span> Medium<br>
+      <span style="display:inline-block;width:12px;height:12px;background:red;margin-right:6px;border-radius:50%"></span> High
+    `;
+    return div;
+  };
+  legend.addTo(map);
+})();

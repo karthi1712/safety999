@@ -3,16 +3,31 @@ const mongoose = require("mongoose");
 const IncidentSchema = new mongoose.Schema({
   title: { type: String, required: true },
   description: String,
-  category: String,
+  category: {
+    type: String,
+    default: "general"
+  },
   severity: {
     type: String,
-    enum: ["low", "medium", "high"],
+    enum: ["low", "medium", "high", "critical"],
     default: "low"
   },
-  image_url: String,
+  priority: {
+    type: String,
+    enum: ["low", "medium", "high", "critical"],
+    default: "low"
+  },
+  reportedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null
+  },
+  area: String,
+  incidentId: String,
   status: {
     type: String,
-    default: "unverified"
+    enum: ["unverified", "pending", "in-progress", "resolved", "closed"],
+    default: "pending"
   },
   location: {
     type: {
@@ -24,9 +39,18 @@ const IncidentSchema = new mongoose.Schema({
       type: [Number],
       required: true
     }
+  },
+  tags: [String],
+  responseTime: Number,
+  assignedTo: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null
   }
 }, { timestamps: true });
 
 IncidentSchema.index({ location: "2dsphere" });
+IncidentSchema.index({ category: 1, severity: 1, status: 1 });
+IncidentSchema.index({ incidentId: 1 });
 
 module.exports = mongoose.model("Incident", IncidentSchema);

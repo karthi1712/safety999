@@ -3,15 +3,120 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <title>Dashboard | Public Safety</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <body><link rel="stylesheet" href="styles.css">
-<div class="nav"><h3>Dashboard</h3></div>
-<div class="container grid">
-<div class="card">Reports</div>
-<div class="card">Alerts</div>
-<div class="card">Analytics</div>
-</div></body>
+  <div id="navbar"></div>
+
+  <section class="container">
+    <div class="page-header">
+      <div>
+        <span class="eyebrow">Dashboard</span>
+        <h1>Operations overview</h1>
+        <p class="page-subtitle">Monitor users, incidents, and response readiness through a modern public safety console.</p>
+      </div>
+    </div>
+    <div class="grid stats-grid">
+      <div class="card stat-card-large">
+        <span class="stat-value" id="usersCount">--</span>
+        <p>Registered users</p>
+      </div>
+      <div class="card stat-card-large">
+        <span class="stat-value" id="incidentsCount">--</span>
+        <p>Incidents registered</p>
+      </div>
+      <div class="card stat-card-large">
+        <span class="stat-value" id="resolvedCount">--</span>
+        <p>Resolved cases</p>
+      </div>
+      <div class="card stat-card-large">
+        <span class="stat-value" id="criticalCount">--</span>
+        <p>Critical alerts</p>
+      </div>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <h3>DSA overview</h3>
+        <p id="dsaSummary">Loading response insights...</p>
+      </div>
+      <div class="card">
+        <h3>Daily reporting trend</h3>
+        <canvas id="trendChart" height="220"></canvas>
+      </div>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <h3>Recent incidents</h3>
+        <div id="recentIncidents"></div>
+      </div>
+    </div>
+  </section>
+  <script src="../assets/js/core/api.js"></script>
+  <script src="../assets/js/core/navbar.js"></script>
+  <script>
+    async function renderDashboard() {
+      const user = JSON.parse(localStorage.getItem('user') || 'null');
+      if (!user || !user.token) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const summaryRes = await fetch('/api/auth/summary', { headers: { Authorization: 'Bearer ' + user.token } });
+      const summary = summaryRes.ok ? await summaryRes.json() : null;
+      document.getElementById('usersCount').textContent = summary ? summary.userCount : 'N/A';
+      document.getElementById('incidentsCount').textContent = summary ? summary.incidentCount : 'N/A';
+      document.getElementById('resolvedCount').textContent = summary ? summary.resolvedCount : 'N/A';
+      document.getElementById('criticalCount').textContent = summary ? summary.criticalCount : 'N/A';
+
+      const incidentRes = await fetch('/api/incidents', { headers: { Authorization: 'Bearer ' + user.token } });
+      const incidents = incidentRes.ok ? await incidentRes.json() : [];
+      const recentList = incidents.slice(0, 5).map((incident) => `<p><strong>${incident.title}</strong> — ${incident.status} · ${incident.priority || incident.severity}</p>`).join('');
+      document.getElementById('recentIncidents').innerHTML = recentList || '<p>No incidents yet.</p>';
+      document.getElementById('dsaSummary').textContent = incidents.length ? 'Priority queue and graph-based routing are now active for incident triage.' : 'No incident data yet.';
+
+      const trendRes = await fetch('/api/incidents/trend', { headers: { Authorization: 'Bearer ' + user.token } });
+      const trend = trendRes.ok ? await trendRes.json() : [];
+      renderTrendChart(trend);
+    }
+
+    function renderTrendChart(trend) {
+      const canvas = document.getElementById('trendChart');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const width = canvas.width = canvas.clientWidth || 320;
+      const height = canvas.height = 220;
+      ctx.clearRect(0, 0, width, height);
+
+      const values = trend.map((entry) => entry.count);
+      const maxValue = Math.max(1, ...values);
+      const stepX = values.length > 1 ? (width - 40) / (values.length - 1) : width - 40;
+      ctx.strokeStyle = '#60a5fa';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      values.forEach((value, index) => {
+        const x = 20 + index * stepX;
+        const y = height - 20 - (value / maxValue) * (height - 40);
+        if (index === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '12px sans-serif';
+      trend.forEach((entry, index) => {
+        const x = 20 + index * stepX;
+        const y = height - 20 - (entry.count / maxValue) * (height - 40);
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillText(entry._id, x - 18, height - 4);
+      });
+    }
+    renderDashboard().catch(() => {
+      document.getElementById('usersCount').textContent = 'N/A';
+      document.getElementById('incidentsCount').textContent = 'N/A';
+    });
+  </script>
 </body>
 </html>

@@ -1,14 +1,19 @@
 const express = require("express");
 const router = express.Router();
+const protect = require("../middleware/authMiddleware");
 
 const {
   createIncident,
   getAllIncidents,
-  getNearbyIncidents
-} = require("../controllers/incidentController");
+  getNearbyIncidents,
+  getDSAInsights,
+  getDailyIncidentTrend
+} = require("../controllers/incidentController.js");
 
-router.post("/", createIncident);
-router.get("/", getAllIncidents);
-router.get("/near", getNearbyIncidents);
+router.post("/", protect, createIncident);
+router.get("/", protect, getAllIncidents);
+router.get("/near", protect, getNearbyIncidents);
+router.get("/dsa", protect, getDSAInsights);
+router.get("/trend", protect, getDailyIncidentTrend);
 
 module.exports = router;

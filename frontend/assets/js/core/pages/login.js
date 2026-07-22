@@ -51,4 +51,54 @@ function login() {
   } else {
     handleSignup(email, password);
   }
+
+async function handleLogin(email, password) {
+  try {
+    const res = await fetch(`${BASE}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      localStorage.setItem("user", JSON.stringify(data.user));
+      window.location.href = "dashboard.html";
+    } else {
+      alert(data.msg);
+    }
+  } catch (err) {
+    alert("Login failed: " + err.message);
+  }
+}
+
+async function handleSignup(email, password) {
+  const name = prompt("Enter your name:");
+  const mobile = prompt("Enter your mobile number:");
+
+  if (!name || !mobile) {
+    alert("Name and mobile required");
+    return;
+  }
+
+  try {
+    const res = await fetch(`${BASE}/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password, mobile })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      alert("Registration successful! Please login.");
+      toggle(); // Switch to login
+    } else {
+      alert(data.msg);
+    }
+  } catch (err) {
+    alert("Registration failed: " + err.message);
+  }
+}
 }

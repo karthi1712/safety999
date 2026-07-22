@@ -1,24 +1,53 @@
+function useCurrent() {
+  navigator.geolocation.getCurrentPosition((pos) => {
+    document.getElementById("lat").value = pos.coords.latitude;
+    document.getElementById("lng").value = pos.coords.longitude;
+    alert("Current location set!");
+  }, (err) => {
+    alert("Location access denied. Please allow location access.");
+  });
+}
+
 function submit() {
-  const title = document.getElementById("title").value;
-  const description = document.getElementById("desc").value;
+  const title = document.getElementById("title").value.trim();
+  const description = document.getElementById("desc").value.trim();
+  const category = document.getElementById("category").value.trim();
   const severity = document.getElementById("severity").value;
+  const area = document.getElementById("area").value.trim();
+  let lat = document.getElementById("lat").value;
+  let lng = document.getElementById("lng").value;
 
   if (!title) {
     alert("Title required");
     return;
   }
 
-  navigator.geolocation.getCurrentPosition(async (pos) => {
-    await createIncident({
-      title,
-      description,
-      severity,
-      lat: pos.coords.latitude,
-      lng: pos.coords.longitude
-    });
+  if (!lat || !lng) {
+    alert("Please set location (use current or enter manually)");
+    return;
+  }
 
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  const payload = {
+    title,
+    description,
+    category,
+    severity,
+    area,
+    lat: parseFloat(lat),
+    lng: parseFloat(lng)
+  };
+
+  if (user && user._id) {
+    payload.userId = user._id;
+  }
+
+  createIncident(payload).then(() => {
     alert("✅ Incident Reported!");
-
-    window.location.href = "map.html";
+    window.location.href = "dashboard.html";
+  }).catch(err => {
+    alert("Failed to report: " + err.message);
   });
 }
+
+const submitIncident = submit;

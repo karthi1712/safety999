@@ -1,83 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Safety Map | Stay Safe</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
-        body { margin: 0; background: #0b0e14; color: white; font-family: sans-serif; }
-        .nav { padding: 20px 5%; background: rgba(0,0,0,0.8); display: flex; justify-content: space-between; }
-        .nav a { color: white; text-decoration: none; margin-left: 20px; }
-        
-        /* Map Container Size */
-        #map { 
-            height: calc(100vh - 70px); 
-            width: 100%; 
-            background: #111;
-        }
-        
-        /* Custom styling to match your dark theme */
-        .leaflet-container { background: #0b0e14 !important; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Map | Safety</title>
+  <link rel="stylesheet" href="styles.css">
+  
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
-
-<div class="nav">
-    <h3 onclick="location.href='index.html'" style="cursor:pointer">Safety</h3>
-    <div>
-        <a href="index.html">Home</a>
-        <a href="report.html">Report</a>
-        <a href="feed.html">Feed</a>
+  <div id="navbar"></div>
+  
+  <section class="container page-panel">
+    <div class="page-header">
+      <div>
+        <span class="eyebrow">Map</span>
+        <h1>Explore incidents visually</h1>
+      </div>
     </div>
-</div>
-
-<div id="map"></div>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>
-    // 1. Initialize the map
-    const map = L.map('map').setView([20.59, 78.96], 5); 
-
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; OpenStreetMap'
-    }).addTo(map);
-
-    // 2. NEW: Function to find your live location
-    map.locate({setView: true, maxZoom: 16});
-
-    function onLocationFound(e) {
-        const radius = e.accuracy / 2;
-
-        // Add a marker at your live location
-        L.marker(e.latlng).addTo(map)
-            .bindPopup("You are within " + radius + " meters from this point").openPopup();
-
-        // Add a circle to show the accuracy area
-        L.circle(e.latlng, radius).addTo(map);
-    }
-
-    // 3. Handle errors (if user denies permission)
-    function onLocationError(e) {
-        alert("Location access denied. Please enable GPS in your browser.");
-    }
-
-    map.on('locationfound', onLocationFound);
-    map.on('locationerror', onLocationError);
-
-    // 4. Still fetch incidents from your MongoDB backend
-    fetch("http://localhost:5000/api/incidents")
-    .then(res => res.json())
-    .then(data => {
-        data.forEach(incident => {
-            if(incident.latitude && incident.longitude) {
-                L.marker([incident.latitude, incident.longitude], {icon: redIcon})
-                 .addTo(map)
-                 .bindPopup(`<b>${incident.title}</b>`);
-            }
-        });
-    });
-</script>
-
+    <div id="map" class="map-block"></div>
+  </section>
+  <script src="../assets/js/core/navbar.js"></script>
+  
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="../assets/js/core/api.js"></script>
+  <script src="../assets/js/core/pages/map.js"></script>
 </body>
 </html>

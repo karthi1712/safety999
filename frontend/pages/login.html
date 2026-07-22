@@ -1,50 +1,92 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login | Safety</title>
+  <link rel="stylesheet" href="styles.css">
+  
 </head>
 <body>
+  <section class="auth-panel">
+    <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle theme">🌙</button>
+    <div class="auth-card">
+      <div class="auth-logo">S</div>
+      <h1>Log in to your account</h1>
+      <input id="email" type="email" placeholder="Email" />
+      <div class="password-wrap">
+        <input id="password" type="password" placeholder="Password" />
+        <button class="password-toggle" type="button" onclick="togglePassword('password')" aria-label="Show password">👁</button>
+      </div>
+      <button class="btn primary" onclick="login()">Log In</button>
+      <p class="form-footer">Don't have an account? <a href="signup.html">Sign up</a></p>
+    </div>
+  </section>
+  <script src="../assets/js/core/api.js"></script>
+  <script>
+    (function() {
+      if (localStorage.getItem('user')) {
+        window.location.href = 'dashboard.html';
+      }
+    })();
+    async function getLocation() {
+      return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) return reject(new Error('Geolocation unavailable'));
+        navigator.geolocation.getCurrentPosition((pos) => {
+          resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        }, reject, { timeout: 5000 });
+      });
+    }
 
-<div class="nav">
-  <h3 onclick="goHome()" style="cursor:pointer">Safety</h3>
-</div>
+    async function login() {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+      if (!email || !password) return alert('Please fill all fields');
 
-<div class="container">
-<h2>Login</h2>
+      let locationData = {};
+      try {
+        locationData = await getLocation();
+      } catch (_) {
+        // ignore location permission failure
+      }
 
-<input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Password">
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, ...locationData })
+        });
+        const data = await safeJsonResponse(res);
+        if (!res.ok) throw new Error(data?.msg || 'Login failed');
+        localStorage.setItem('user', JSON.stringify({ ...data.user, token: data.token }));
+        window.location.href = 'dashboard.html';
+      } catch (error) {
+        alert(error.message || 'Login failed');
+      }
+    }
 
-<button class="btn primary" onclick="login()">Login</button>
+    function togglePassword(fieldId) {
+      const input = document.getElementById(fieldId);
+      const button = input?.parentElement?.querySelector('.password-toggle');
+      if (!input || !button) return;
+      const isHidden = input.type === 'password';
+      input.type = isHidden ? 'text' : 'password';
+      button.textContent = isHidden ? '🙈' : '👁';
+      button.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+    }
 
-<p style="margin-top:10px;">
-  New here? <a href="signup.html">Create Account</a>
-</p>
-</div>
+    function applyTheme(theme) {
+      document.body.dataset.theme = theme;
+      localStorage.setItem('theme', theme);
+      const toggle = document.getElementById('themeToggle');
+      if (toggle) toggle.textContent = theme === 'light' ? '🌙' : '☀️';
+    }
 
-<script>
-function goHome(){ window.location.href="index.html"; }
-
-async function login(){
-  const res = await fetch("http://localhost:5000/api/auth/login",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      email:email.value,
-      password:password.value
-    })
-  });
-
-  const data = await res.json();
-
-  if(res.status===200){
-    localStorage.setItem("user", JSON.stringify(data.user));
-    window.location.href="dashboard.html";
-  } else {
-    alert(data.msg);
-  }
-}
-</script>
-
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    applyTheme(savedTheme);
+    document.getElementById('themeToggle')?.addEventListener('click', () => {
+      const nextTheme = document.body.dataset.theme === 'light' ? 'dark' : 'light';
+      applyTheme(nextTheme);
+    });
+  </script>
 </body>
 </html>

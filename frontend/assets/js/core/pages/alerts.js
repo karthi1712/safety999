@@ -1,21 +1,29 @@
-initPage(async () => {
-  const app = document.getElementById("app");
+const alertsGrid = document.getElementById('alertsGrid');
 
-  navigator.geolocation.getCurrentPosition(async pos => {
-    const data = await fetchNearby(pos.coords.latitude, pos.coords.longitude);
+async function loadAlerts() {
+  try {
+    const incidents = await fetchIncidents();
+    if (!incidents || !incidents.length) {
+      alertsGrid.innerHTML = '<div class="card"><h3>No alerts found</h3><p>There are no active incident reports at the moment.</p></div>';
+      return;
+    }
 
-    app.innerHTML = `
-      <h2>Nearby Alerts</h2>
-      ${data.map(i => `
-        <div class="card" style="border-left:5px solid ${
-          i.severity === "high" ? "red" :
-          i.severity === "medium" ? "orange" : "green"
-        }">
-          <h3>${i.title}</h3>
-          <p>${i.description}</p>
-          <small>${i.severity}</small>
+    alertsGrid.innerHTML = incidents.map((incident) => {
+      const color = incident.severity === 'high' ? '#f87171' : incident.severity === 'medium' ? '#fb923c' : '#34d399';
+      return `
+        <div class="card alert-card" style="border-left: 5px solid ${color};">
+          <h3>${incident.title}</h3>
+          <p>${incident.description || 'No description provided.'}</p>
+          <div class="alert-meta">
+            <span>${incident.severity.toUpperCase()} severity</span>
+            <span>${new Date(incident.createdAt).toLocaleString()}</span>
+          </div>
         </div>
-      `).join("")}
-    `;
-  });
-});
+      `;
+    }).join('');
+  } catch (err) {
+    alertsGrid.innerHTML = `<div class="card"><h3>Error loading alerts</h3><p>${err.message}</p></div>`;
+  }
+}
+
+loadAlerts();

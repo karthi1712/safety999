@@ -1,55 +1,51 @@
 <!DOCTYPE html>
-<html>
-<head><link rel="stylesheet" href="styles.css"></head>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Report Incident | Safety</title>
+  <link rel="stylesheet" href="styles.css">
+  
+</head>
 <body>
-
-<div class="container">
-
-<h2>Report Incident</h2>
-
-<input id="title" placeholder="Title">
-<textarea id="desc"></textarea>
-
-<select id="severity">
-<option>low</option>
-<option>medium</option>
-<option>high</option>
-</select>
-
-<p>Location:</p>
-<button onclick="useCurrent()">Use Current Location</button>
-
-<input id="lat" placeholder="Latitude">
-<input id="lng" placeholder="Longitude">
-
-<button class="btn primary" onclick="submit()">Submit</button>
-
-</div>
-
-<script>
-function useCurrent(){
-navigator.geolocation.getCurrentPosition(pos=>{
-  lat.value = pos.coords.latitude;
-  lng.value = pos.coords.longitude;
-});
-}
-
-async function submit(){
-  await fetch("http://localhost:5000/api/incidents",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      title:title.value,
-      description:desc.value,
-      severity:severity.value,
-      lat:parseFloat(lat.value),
-      lng:parseFloat(lng.value)
-    })
-  });
-
-  alert("Incident saved");
-}
-</script>
-
+  <div id="navbar"></div>
+  
+  <section class="container page-panel">
+    <div class="page-header">
+      <div>
+        <span class="eyebrow">Report</span>
+        <h1>Submit a new incident</h1>
+      </div>
+    </div>
+    <div class="card form-card">
+      <label for="title">Incident title</label>
+      <input id="title" placeholder="Describe the issue" />
+      <label for="desc">Details</label>
+      <textarea id="desc" placeholder="What happened?"></textarea>
+      <label for="category">Category</label>
+      <input id="category" placeholder="Fire, Flood, Medical, Crime..." />
+      <label for="severity">Severity</label>
+      <select id="severity">
+        <option value="low">Low</option>
+        <option value="medium">Medium</option>
+        <option value="high">High</option>
+        <option value="critical">Critical</option>
+      </select>
+      <label for="area">Area / Zone</label>
+      <input id="area" placeholder="e.g. Downtown, North Zone" />
+      <div class="location-row">
+        <button class="btn secondary" onclick="useCurrent()">Use current location</button>
+      </div>
+      <div class="grid split-inputs">
+        <input id="lat" placeholder="Latitude" />
+        <input id="lng" placeholder="Longitude" />
+      </div>
+      <button class="btn primary" onclick="submitIncident()">Submit report</button>
+    </div>
+  </section>
+  <script src="../assets/js/core/api.js"></script>
+  <script src="../assets/js/core/navbar.js"></script>
+  
+  <script src="../assets/js/core/pages/report.js"></script>
 </body>
 </html>
