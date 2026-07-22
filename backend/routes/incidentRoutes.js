@@ -8,7 +8,7 @@ const {
   getNearbyIncidents,
   getDSAInsights,
   getDailyIncidentTrend
-} = require("../controllers/incidentController.js");
+} = require("../controllers/incidentController");
 
 router.post("/", protect, createIncident);
 router.get("/", protect, getAllIncidents);
