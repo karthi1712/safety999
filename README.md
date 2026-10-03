@@ -229,13 +229,12 @@ The system follows a **client-server architecture**:
 ---
 ## **Structure**
 ## **Frontend**
-<img width="172" height="542" alt="image" src="https://github.com/user-attachments/assets/3c250998-1ad2-48ac-968d-f2cf9e8a5587" />
-<img width="236" height="486" alt="image" src="https://github.com/user-attachments/assets/8a3840a4-2de5-41da-bacb-1cee00c8296d" />
+<img width="355" height="758" alt="Screenshot 2026-10-04 010710" src="https://github.com/user-attachments/assets/49b4976e-1b5b-4359-aa68-48050a34d37e" />
 
 
 ## **Backend**
-<img width="248" height="525" alt="image" src="https://github.com/user-attachments/assets/cdbe49cf-1d33-4334-ac23-9975740248ea" />
-<img width="232" height="511" alt="image" src="https://github.com/user-attachments/assets/09030c23-fb45-4ae6-a88d-bfa8313754c3" />
+<img width="366" height="767" alt="Screenshot 2026-10-04 010555" src="https://github.com/user-attachments/assets/decbbb36-2251-4e5f-9752-a5802169b78a" />
+
 
 ## **Conclusion**
 The Neighborhood Watch & Incident Reporting Platform provides a secure and efficient solution for community safety management by combining real-time reporting, geolocation tracking, analytics, and communication features into a single integrated system.
